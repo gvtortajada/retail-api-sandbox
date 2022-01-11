@@ -1,7 +1,7 @@
 # installation
 ```
-mkdir retail-catalog
-cd retail-catalog
+git clone https://github.com/gvtortajada/retail-api-sandbox
+cd retail-api-sandbox
 pip install virtualenv
 virtualenv venv
 source venv/bin/activate
