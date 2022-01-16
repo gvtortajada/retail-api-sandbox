@@ -91,7 +91,13 @@ def build_audience(line: dict) -> Audience:
 
     
 def build_sizes(line: dict) -> List[str]:
-    return [size.split(':')[1] for size in line['sizes'].split(',')]
+    try:
+        sizes = line['sizes']
+        if not sizes or 'One Size' in sizes:
+            return []
+        return [size.split(':')[1] for size in sizes.split(',')]
+    except:
+        print(line['sizes'])
 
 
 def build_materials(line: dict) -> List[str]:
