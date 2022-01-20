@@ -1,3 +1,4 @@
 wheel
 apache-beam[gcp, dataframe]
 pandas
+google-cloud-bigquery
