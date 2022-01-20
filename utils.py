@@ -21,12 +21,46 @@ materials = config.get('OPTIONS', 'materials')
 if materials:
     materials = materials.split(',')
 
-def fromCSV(line:dict, categories_ref:dict) -> Product:
+def variants_and_primary_from_CSV(product_by_code:tuple, categories_ref:dict) -> tuple:
+    lines=product_by_code[1]
+    variants = [create_variant(line, categories_ref) for line in lines]
+    primary = create_primary(variants)
+    variants = [json.loads(json.dumps(variant, default=lambda o: o.__dict__)) for variant in variants]
+    primary = json.loads(json.dumps(primary, default=lambda o: o.__dict__))
+    return (product_by_code[0],[primary] + variants)
+
+def create_primary(variants: List[Product]) -> Product:
+
+    product = Product()
+    product.type = 'PRIMARY'
+    product.id = variants[0].primaryProductId
+    product.title = variants[0].title
+    product.description = variants[0].description
+    product.attributes = merge_variant_attributes(variants)
+    categories = []
+    for variant in variants:
+        categories += variant.categories
+    product.categories = list(dict.fromkeys(categories))
+    tags = []
+    for variant in variants:
+        tags += variant.tags
+    product.tags = list(dict.fromkeys(tags))
+    sizes = []
+    for variant in variants:
+        sizes += variant.sizes
+    product.sizes = list(dict.fromkeys(sizes))
+    materials = []
+    for variant in variants:
+        materials += variant.materials
+    product.materials = list(dict.fromkeys(materials))
+    return product
+
+def create_variant(line: dict, categories_ref:dict) -> Product:
     product = Product()    
     # product.name = line['summary'] Optional it contains the resource path better to leave it empty
     product.id = line['productCode']
-    product.type = 'PRIMARY'
-    product.primaryProductId = line['productCode']
+    product.type = 'VARIANT'
+    product.primaryProductId = line['code']
     # product.collectionMemberIds = []    
     # product.gtin = line['']
     product.categories = build_categories(line, categories_ref)
@@ -53,8 +87,27 @@ def fromCSV(line:dict, categories_ref:dict) -> Product:
     # product.conditions = line['']
     # product.retrievableFields = line['']
     # product.publishTime = line['date_published']
-    # product.promotions = line[''] 
-    return json.loads(json.dumps(product, default=lambda o: o.__dict__))      
+    # product.promotions = line['']
+    return product
+
+
+
+def merge_variant_attributes(variants: List[Product]) -> List[Attribute]:
+    keys = {}
+    for variant in variants:
+        for attribute in variant.attributes:
+            if not attribute.key in keys:
+                keys[attribute.key] = attribute
+            else:
+                for text in attribute.value.text:
+                    if not text in keys[attribute.key].value.text:
+                        keys[attribute.key].value.text.append(text)
+                for number in attribute.value.numbers:
+                    if not number in keys[attribute.key].value.numbers:
+                        keys[attribute.key].value.numbers.append(number)
+
+    return list(keys.values())
+
 
 def build_attributes(line: dict) -> List[Attribute]:
     attributes = []
