@@ -1,6 +1,6 @@
 import apache_beam as beam
-from utils import fromCSV
 
+from retailapiloader.utils import Utils
 
 class CategoriesFn(beam.CombineFn):
     def create_accumulator(self):
@@ -22,8 +22,12 @@ class CategoriesFn(beam.CombineFn):
 
 
 class MapToProduct(beam.DoFn):
+
+    def __init__(self, utils:Utils):
+        self.utils = utils
+
     def process(self, element, categories):
-        yield fromCSV(element, categories)
+        yield self.utils.fromCSV(element, categories)
 
 class MergeProducts(beam.DoFn):
     def process(self, element):

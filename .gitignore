@@ -4,3 +4,4 @@ __pycache__
 inputs/
 output/
 venv/
+retailapiloader.egg-info/
